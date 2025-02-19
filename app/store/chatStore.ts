@@ -16,6 +16,11 @@ interface SearchFilters {
     startDate: string | undefined;
     endDate: string | undefined;
   };
+  saleStatus: {
+    upcoming: boolean;
+    ongoing: boolean;
+    completed: boolean;
+  };
 }
 
 interface ChatStore {
@@ -37,6 +42,7 @@ interface ChatStore {
   // 필터 관련 액션
   setRegion: (region: string) => void;
   setPeriod: (startDate: string | undefined, endDate: string | undefined) => void;
+  setSaleStatusFilter: (key: 'upcoming' | 'ongoing' | 'completed', value: boolean) => void;
   resetFilters: () => void;
   
   // 페이지네이션 액션
@@ -66,7 +72,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   apartmentList: [],
   filters: {
     region: '전체',
-    period: { startDate: undefined, endDate: undefined }
+    period: { startDate: undefined, endDate: undefined },
+    saleStatus: {
+      upcoming: true,
+      ongoing: true,
+      completed: true
+    }
   },
   currentPage: 1,
   totalPages: 1,
@@ -106,10 +117,27 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }));
   },
   
+  setSaleStatusFilter: (key: 'upcoming' | 'ongoing' | 'completed', value: boolean) => {
+    set((state) => ({
+      filters: {
+        ...state.filters,
+        saleStatus: {
+          ...state.filters.saleStatus,
+          [key]: value
+        }
+      }
+    }));
+  },
+  
   resetFilters: () => set({
     filters: {
       region: '전체',
-      period: getCurrentMonthRange()
+      period: getCurrentMonthRange(),
+      saleStatus: {
+        upcoming: true,
+        ongoing: true,
+        completed: true
+      }
     },
     currentPage: 1,
   }),

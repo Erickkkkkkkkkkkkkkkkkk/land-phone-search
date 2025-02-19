@@ -5,6 +5,7 @@ import { useChatStore } from '@/app/store/chatStore';
 import { DatePicker } from '@/app/components/ui/date-picker';
 import { Button } from '@/app/components/ui/button';
 import { format } from 'date-fns';
+import { SaleStatusFilter } from './SaleStatusFilter';
 
 // 함수: 주어진 연도와 월의 마지막 날짜를 반환 (윤년 자동 처리)
 const getLastDayOfMonth = (year: number, month: number): Date => {
@@ -62,7 +63,11 @@ const calculateOneYearPeriod = (): { startDate: string, endDate: string } => {
 };
 
 export const PeriodSelect = () => {
-  const { filters, setPeriod } = useChatStore();
+  const { filters, setPeriod, setSaleStatusFilter } = useChatStore();
+
+  const handleSaleStatusChange = (key: 'upcoming' | 'ongoing' | 'completed', value: boolean): void => {
+    setSaleStatusFilter(key, value);
+  };
 
   // 계산된 검색 기간
   const searchPeriod = calculateOneYearPeriod();
@@ -87,7 +92,13 @@ export const PeriodSelect = () => {
   return (
     <div className="w-full p-4">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">분양 기간 선택</h3>
+        <div className="flex items-center space-x-4">
+         
+          <SaleStatusFilter
+            filters={filters.saleStatus}
+            onChange={handleSaleStatusChange}
+          />
+        </div>
         <p className="text-sm text-gray-500">공고 기간: {searchPeriod.startDate} ~ {searchPeriod.endDate}</p>
       </div>
       

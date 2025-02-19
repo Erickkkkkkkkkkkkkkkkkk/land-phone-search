@@ -7,6 +7,7 @@ import { Globe, Info } from 'lucide-react';
 import ApartmentDetailModal from '@/app/components/ApartmentDetailModal';
 import { ApartmentInfo } from '@/app/types/api';
 import SaleStatusBadge from '@/app/components/SaleStatusBadge';
+import SaleStatusFilter from '@/app/components/SaleStatusFilter';
 
 export const ApartmentList = () => {
   const {
@@ -17,7 +18,8 @@ export const ApartmentList = () => {
     totalPages,
     setCurrentPage,
     fetchApartments,
-    filters
+    filters,
+    setSaleStatusFilter
   } = useChatStore();
 
   const [selectedApartment, setSelectedApartment] = React.useState<ApartmentInfo | null>(null);
@@ -45,16 +47,34 @@ export const ApartmentList = () => {
     fetchApartments();
   }, [currentPage, fetchApartments]);
 
+  // 분양 상태 필터링 함수 추가
+  const getSaleStatus = (apt: ApartmentInfo) => {
+    const today = new Date();
+    const recDate = new Date(apt.RCRIT_PBLANC_DE);
+    const annDate = new Date(apt.PRZWNER_PRESNATN_DE);
+
+    if (today < recDate) return 'upcoming';
+    if (today > annDate) return 'completed';
+    return 'ongoing';
+  };
+
   // 분양 기간 필터링: filters.period가 있다면, 아파트의 판매 기간과 필터 기간이 겹치는지 체크
   const filteredApartments = apartmentList.filter((apt) => {
+    // 기존 기간 필터링 로직
     if (filters.period.startDate && filters.period.endDate) {
       const filterStart = new Date(filters.period.startDate);
       const filterEnd = new Date(filters.period.endDate);
       const saleStart = new Date(apt.RCRIT_PBLANC_DE);
       const saleEnd = new Date(apt.PRZWNER_PRESNATN_DE);
-      return saleEnd >= filterStart && saleStart <= filterEnd;
+      
+      if (!(saleEnd >= filterStart && saleStart <= filterEnd)) {
+        return false;
+      }
     }
-    return true;
+
+    // 분양 상태 필터링 추가
+    const status = getSaleStatus(apt);
+    return filters.saleStatus[status];
   });
 
   if (isLoading) {
@@ -84,6 +104,7 @@ export const ApartmentList = () => {
 
   return (
     <div className="space-y-6 p-4">
+     
       {/* 분양 정보 목록 */}
       <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {filteredApartments.map((apt) => (
