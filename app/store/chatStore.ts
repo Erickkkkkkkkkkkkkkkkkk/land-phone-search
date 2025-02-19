@@ -66,7 +66,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   apartmentList: [],
   filters: {
     region: '전체',
-    period: getCurrentMonthRange()
+    period: { startDate: undefined, endDate: undefined }
   },
   currentPage: 1,
   totalPages: 1,
