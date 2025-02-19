@@ -125,7 +125,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           ...state.filters.saleStatus,
           [key]: value
         }
-      }
+      },
+      currentPage: 1,
     }));
   },
   

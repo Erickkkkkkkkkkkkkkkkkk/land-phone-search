@@ -19,7 +19,7 @@ export const SaleStatusFilter: React.FC<SaleStatusFilterProps> = ({
 }) => {
   return (
     <div className="w-full p-4 bg-white ">
-      <div className="flex items-center justify-between max-w-md mx-auto">
+      <div className="flex items-center justify-between max-w-md mx-auto space-x-4">
         <div className="flex items-center space-x-2">
           <Switch
             id="upcoming"
