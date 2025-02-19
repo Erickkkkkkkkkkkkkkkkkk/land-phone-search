@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useChatStore } from '@/app/store/chatStore';
-import { AREA_CODES } from '@/app/services/apartmentService';
+import { AREA_CODES } from '@/app/types/api';
 import { Button } from '@/app/components/ui/button';
 
 export const RegionSelect = () => {
@@ -13,10 +13,16 @@ export const RegionSelect = () => {
     setRegion(region);
   };
 
+  // useRef를 사용하여 첫 렌더에서는 API 호출을 피함
+  const isFirstRender = React.useRef(true);
   React.useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     console.log('Region filter changed:', filters.region);
     fetchApartments();
-  }, [filters.region, fetchApartments]);
+  }, [filters.region]);
 
   return (
     <div className="w-full p-4">
@@ -24,7 +30,7 @@ export const RegionSelect = () => {
       <div className="grid grid-cols-4 gap-2">
         <Button
           onClick={() => handleRegionChange('전체')}
-          variant={filters.region === '전체' ? "default" : "outline"}
+          variant={filters.region === '전체' ? 'default' : 'outline'}
           className={`
             ${filters.region === '전체'
               ? 'bg-primary text-primary-foreground hover:bg-primary/90'
@@ -38,7 +44,7 @@ export const RegionSelect = () => {
           <Button
             key={region}
             onClick={() => handleRegionChange(region)}
-            variant={filters.region === region ? "default" : "outline"}
+            variant={filters.region === region ? 'default' : 'outline'}
             className={`
               ${filters.region === region
                 ? 'bg-primary text-primary-foreground hover:bg-primary/90'
@@ -54,4 +60,4 @@ export const RegionSelect = () => {
   );
 };
 
-export default RegionSelect; 
+export default RegionSelect;
