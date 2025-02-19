@@ -1,7 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
-import { ApartmentInfo, ApartmentApiParams, AREA_CODES } from '../types/api';
+import { ApartmentInfo, ApartmentApiParams } from '../types/api';
 import { fetchApartmentInfo } from '../services/apartmentService';
 
 interface ChatMessage {
@@ -87,42 +87,20 @@ const useChatStore = create<ChatStore>((set, get) => ({
         const regionCode = state.selectedRegion;
         if (regionCode) {
           // 명시적으로 cond[SUBSCRPT_AREA_CODE_NM::EQ] 파라미터 추가
-          requestParams['cond[SUBSCRPT_AREA_CODE_NM::EQ]'] = regionCode;
+          requestParams.SUBSCRPT_AREA_CODE_NM = regionCode;
         } else {
           console.warn(`지역 코드를 찾을 수 없음: ${state.selectedRegion}`);
         }
-        
-        console.log('최종 파라미터:', requestParams);
       }
 
-      // 기존 파라미터 추가 로직
-      if (state.selectedHouseType) {
-        requestParams.HOUSE_SECD_LIST = [state.selectedHouseType];
-      }
-
-      if (state.selectedPeriod.startDate) {
-        requestParams.SEARCH_BEGIN_DATE = state.selectedPeriod.startDate;
-      }
-
-      if (state.selectedPeriod.endDate) {
-        requestParams.SEARCH_END_DATE = state.selectedPeriod.endDate;
-      }
-      
-      console.log('최종 API 요청 파라미터:', requestParams);
       const response = await fetchApartmentInfo(requestParams);
-      
-      set({
-        apartmentList: response.data,
-        totalPages: Math.ceil(response.totalCount / 10),
-        loading: false,
-      });
-    } catch {
-      set({
-        error: '분양 정보를 불러오는 중 오류가 발생했습니다.',
-        loading: false,
-      });
+      set({ apartmentList: response.data, totalPages: Math.ceil(response.totalCount / 10) });
+    } catch (error) {
+      set({ error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.' });
+    } finally {
+      set({ loading: false });
     }
   },
 }));
 
-export default useChatStore; 
+export default useChatStore;

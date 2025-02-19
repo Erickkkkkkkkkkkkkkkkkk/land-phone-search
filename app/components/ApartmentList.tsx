@@ -7,7 +7,6 @@ import { Globe, Info } from 'lucide-react';
 import ApartmentDetailModal from '@/app/components/ApartmentDetailModal';
 import { ApartmentInfo } from '@/app/types/api';
 import SaleStatusBadge from '@/app/components/SaleStatusBadge';
-import SaleStatusFilter from '@/app/components/SaleStatusFilter';
 
 export const ApartmentList = () => {
   const {
@@ -18,8 +17,7 @@ export const ApartmentList = () => {
     totalPages,
     setCurrentPage,
     fetchApartments,
-    filters,
-    setSaleStatusFilter
+    filters
   } = useChatStore();
 
   const [selectedApartment, setSelectedApartment] = React.useState<ApartmentInfo | null>(null);

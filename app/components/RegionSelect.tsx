@@ -22,7 +22,7 @@ export const RegionSelect = () => {
     }
     console.log('Region filter changed:', filters.region);
     fetchApartments();
-  }, [filters.region]);
+  }, [filters.region, fetchApartments]);
 
   return (
     <div className="w-full p-4">
