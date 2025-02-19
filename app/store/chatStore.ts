@@ -16,6 +16,11 @@ interface SearchFilters {
     startDate: string | undefined;
     endDate: string | undefined;
   };
+  saleStatus: {
+    upcoming: boolean;
+    ongoing: boolean;
+    completed: boolean;
+  };
 }
 
 interface ChatStore {
@@ -37,6 +42,7 @@ interface ChatStore {
   // 필터 관련 액션
   setRegion: (region: string) => void;
   setPeriod: (startDate: string | undefined, endDate: string | undefined) => void;
+  setSaleStatusFilter: (key: 'upcoming' | 'ongoing' | 'completed', value: boolean) => void;
   resetFilters: () => void;
   
   // 페이지네이션 액션
@@ -66,7 +72,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   apartmentList: [],
   filters: {
     region: '전체',
-    period: getCurrentMonthRange()
+    period: { startDate: undefined, endDate: undefined },
+    saleStatus: {
+      upcoming: true,
+      ongoing: true,
+      completed: true
+    }
   },
   currentPage: 1,
   totalPages: 1,
@@ -94,7 +105,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       filters: { ...state.filters, region: region || '전체' },
       currentPage: 1,
     }));
-    get().fetchApartments();
   },
   
   setPeriod: (startDate: string | undefined, endDate: string | undefined) => {
@@ -105,13 +115,30 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       },
       currentPage: 1,
     }));
-    get().fetchApartments();
+  },
+  
+  setSaleStatusFilter: (key: 'upcoming' | 'ongoing' | 'completed', value: boolean) => {
+    set((state) => ({
+      filters: {
+        ...state.filters,
+        saleStatus: {
+          ...state.filters.saleStatus,
+          [key]: value
+        }
+      },
+      currentPage: 1,
+    }));
   },
   
   resetFilters: () => set({
     filters: {
       region: '전체',
-      period: getCurrentMonthRange()
+      period: getCurrentMonthRange(),
+      saleStatus: {
+        upcoming: true,
+        ongoing: true,
+        completed: true
+      }
     },
     currentPage: 1,
   }),
@@ -142,13 +169,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         SUBSCRPT_AREA_CODE_NM: filters.region !== '전체' ? filters.region : undefined,
       };
 
-      // 공고 기간 파라미터 추가
-      if (filters.period.startDate) {
-        params['cond[RCRIT_PBLANC_DE::GTE]'] = filters.period.startDate;
-      }
-      if (filters.period.endDate) {
-        params['cond[RCRIT_PBLANC_DE::LTE]'] = filters.period.endDate;
-      }
+      // 공고 기간 파라미터 계산 (오늘 날짜 기준으로 1년)
+      const today = new Date();
+      const currentYear = today.getFullYear();
+      const currentMonth = today.getMonth();
+      const computedStartDate = `${currentYear}-01-01`;
+      const computedEndDate = currentMonth >= 9 ? `${currentYear + 1}-12-31` : `${currentYear}-12-31`;
+      params['cond[RCRIT_PBLANC_DE::GTE]'] = computedStartDate;
+      params['cond[RCRIT_PBLANC_DE::LTE]'] = computedEndDate;
 
       // 디버깅 로그
       console.log('API 요청 파라미터:', params);

@@ -6,6 +6,8 @@ import { Button } from '@/app/components/ui/button';
 import { Globe, Info } from 'lucide-react';
 import ApartmentDetailModal from '@/app/components/ApartmentDetailModal';
 import { ApartmentInfo } from '@/app/types/api';
+import SaleStatusBadge from '@/app/components/SaleStatusBadge';
+import SaleStatusFilter from '@/app/components/SaleStatusFilter';
 
 export const ApartmentList = () => {
   const {
@@ -16,12 +18,16 @@ export const ApartmentList = () => {
     totalPages,
     setCurrentPage,
     fetchApartments,
+    filters,
+    setSaleStatusFilter
   } = useChatStore();
 
   const [selectedApartment, setSelectedApartment] = React.useState<ApartmentInfo | null>(null);
   const formatKoreanPhoneNumber = (phone: string): string => {
     const cleaned = phone.replace(/\D/g, '');
-    if (cleaned.startsWith('02')) {
+    if (cleaned.length === 8) {
+      return cleaned.replace(/(\d{4})(\d{4})/, '$1-$2');
+    } else if (cleaned.startsWith('02')) {
       if (cleaned.length === 9) {
         return cleaned.replace(/(\d{2})(\d{3})(\d{4})/, '$1-$2-$3');
       } else if (cleaned.length === 10) {
@@ -41,6 +47,36 @@ export const ApartmentList = () => {
     fetchApartments();
   }, [currentPage, fetchApartments]);
 
+  // 분양 상태 필터링 함수 추가
+  const getSaleStatus = (apt: ApartmentInfo) => {
+    const today = new Date();
+    const recDate = new Date(apt.RCRIT_PBLANC_DE);
+    const annDate = new Date(apt.PRZWNER_PRESNATN_DE);
+
+    if (today < recDate) return 'upcoming';
+    if (today > annDate) return 'completed';
+    return 'ongoing';
+  };
+
+  // 분양 기간 필터링: filters.period가 있다면, 아파트의 판매 기간과 필터 기간이 겹치는지 체크
+  const filteredApartments = apartmentList.filter((apt) => {
+    // 기존 기간 필터링 로직
+    if (filters.period.startDate && filters.period.endDate) {
+      const filterStart = new Date(filters.period.startDate);
+      const filterEnd = new Date(filters.period.endDate);
+      const saleStart = new Date(apt.RCRIT_PBLANC_DE);
+      const saleEnd = new Date(apt.PRZWNER_PRESNATN_DE);
+      
+      if (!(saleEnd >= filterStart && saleStart <= filterEnd)) {
+        return false;
+      }
+    }
+
+    // 분양 상태 필터링 추가
+    const status = getSaleStatus(apt);
+    return filters.saleStatus[status];
+  });
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center p-8">
@@ -58,7 +94,7 @@ export const ApartmentList = () => {
     );
   }
 
-  if (apartmentList.length === 0) {
+  if (filteredApartments.length === 0) {
     return (
       <div className="p-8 text-center text-gray-500">
         <p>검색 조건에 맞는 분양 정보가 없습니다.</p>
@@ -68,15 +104,22 @@ export const ApartmentList = () => {
 
   return (
     <div className="space-y-6 p-4">
+     
       {/* 분양 정보 목록 */}
       <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        {apartmentList.map((apt) => (
+        {filteredApartments.map((apt) => (
           <div
             key={`${apt.HOUSE_MANAGE_NO}-${apt.PBLANC_NO}`}
             className="bg-white rounded-lg shadow-sm border border-gray-300 p-6 hover:shadow-lg transition-shadow"
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-blue-500">{apt.HOUSE_NM}</h3>
+              <div>
+                <h3 className="text-xl font-semibold text-blue-500">{apt.HOUSE_NM}</h3>
+                <SaleStatusBadge 
+                  recruitmentDate={apt.RCRIT_PBLANC_DE}
+                  announcementDate={apt.PRZWNER_PRESNATN_DE}
+                />
+              </div>
               <div className="flex gap-3">
                 {apt.HMPG_ADRES && (
                   <a

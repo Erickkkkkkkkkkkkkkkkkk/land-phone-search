@@ -5,6 +5,7 @@ import { useChatStore } from '@/app/store/chatStore';
 import { DatePicker } from '@/app/components/ui/date-picker';
 import { Button } from '@/app/components/ui/button';
 import { format } from 'date-fns';
+import { SaleStatusFilter } from './SaleStatusFilter';
 
 // 함수: 주어진 연도와 월의 마지막 날짜를 반환 (윤년 자동 처리)
 const getLastDayOfMonth = (year: number, month: number): Date => {
@@ -47,8 +48,29 @@ const getPresetDates = (type: string): { startDate: Date; endDate: Date } => {
   return { startDate: today, endDate: today };
 };
 
+// 새 헬퍼 함수 추가: 오늘 날짜 기준 1년 검색 기간 계산 (월이 10월 이상이면 endDate는 내년 12월 31일, 그 외는 현재 연도 12월 31일)
+const calculateOneYearPeriod = (): { startDate: string, endDate: string } => {
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth(); // 0-indexed
+  if (currentMonth >= 9) { // 10월 이상
+    return { startDate: `${currentYear}-01-01`, endDate: `${currentYear + 1}-12-31` };
+  } else if (currentMonth < 4) { // 4월 이전
+    return { startDate: `${currentYear - 1}-10-01`, endDate: `${currentYear}-12-31` };
+  } else {
+    return { startDate: `${currentYear}-01-01`, endDate: `${currentYear}-12-31` };
+  }
+};
+
 export const PeriodSelect = () => {
-  const { filters, setPeriod, fetchApartments } = useChatStore();
+  const { filters, setPeriod, setSaleStatusFilter } = useChatStore();
+
+  const handleSaleStatusChange = (key: 'upcoming' | 'ongoing' | 'completed', value: boolean): void => {
+    setSaleStatusFilter(key, value);
+  };
+
+  // 계산된 검색 기간
+  const searchPeriod = calculateOneYearPeriod();
 
   // 수정: 프리셋 버튼 클릭 시, 헬퍼 함수를 사용하여 날짜를 계산
   const handlePresetPeriod = (type: string) => {
@@ -69,7 +91,16 @@ export const PeriodSelect = () => {
 
   return (
     <div className="w-full p-4">
-      <h3 className="text-lg font-semibold mb-4">공고 기간 선택</h3>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center space-x-4">
+         
+          <SaleStatusFilter
+            filters={filters.saleStatus}
+            onChange={handleSaleStatusChange}
+          />
+        </div>
+        <p className="text-sm text-gray-500">공고 기간: {searchPeriod.startDate} ~ {searchPeriod.endDate}</p>
+      </div>
       
       {/* 프리셋 버튼 */}
       <div className="grid grid-cols-4 gap-2 mb-4">
