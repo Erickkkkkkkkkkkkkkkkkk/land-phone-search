@@ -48,7 +48,7 @@ const getPresetDates = (type: string): { startDate: Date; endDate: Date } => {
 };
 
 export const PeriodSelect = () => {
-  const { filters, setPeriod, fetchApartments } = useChatStore();
+  const { filters, setPeriod } = useChatStore();
 
   // 수정: 프리셋 버튼 클릭 시, 헬퍼 함수를 사용하여 날짜를 계산
   const handlePresetPeriod = (type: string) => {

@@ -82,5 +82,12 @@ export const HOUSE_CODES = {
 
 export const HOUSE_DETAIL_CODES = {
   '민영': '01',
-  '국민': '03',
-} as const; 
+  '국민': '03'
+} as const;
+
+export const formatDate = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}${month}${day}`;
+}; 

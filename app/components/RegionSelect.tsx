@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useChatStore } from '@/app/store/chatStore';
-import { AREA_CODES } from '@/app/services/apartmentService';
+import { AREA_CODES } from '@/app/types/api';
 import { Button } from '@/app/components/ui/button';
 
 export const RegionSelect = () => {

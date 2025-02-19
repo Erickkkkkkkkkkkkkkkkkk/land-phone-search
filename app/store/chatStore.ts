@@ -105,7 +105,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       },
       currentPage: 1,
     }));
-    get().fetchApartments();
   },
   
   resetFilters: () => set({
