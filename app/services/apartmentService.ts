@@ -1,5 +1,5 @@
 import { ApartmentApiParams, ApartmentApiResponse } from '../types/api';
-import { calculateOneYearPeriod } from '../../src/utils/dateUtils';
+import { calculateOneYearPeriod } from '../utils/dateUtils';
 
 const BASE_URL = 'https://api.odcloud.kr/api';
 const API_KEY = 'qGvXQsatfqC7L8fJoo+GPXf95HWgzNjTNotFONU4y8eKUi+mb1Ph1g+a3cqrSglWZjphsAUspokZQ1nExHom6A==';
