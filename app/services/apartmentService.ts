@@ -1,4 +1,5 @@
-import { ApartmentApiParams, ApartmentApiResponse, formatDate } from '../types/api';
+import { ApartmentApiParams, ApartmentApiResponse } from '../types/api';
+import { calculateOneYearPeriod } from '../../src/utils/dateUtils';
 
 const BASE_URL = 'https://api.odcloud.kr/api';
 const API_KEY = 'qGvXQsatfqC7L8fJoo+GPXf95HWgzNjTNotFONU4y8eKUi+mb1Ph1g+a3cqrSglWZjphsAUspokZQ1nExHom6A==';
@@ -13,35 +14,6 @@ export class ApiError extends Error {
     this.name = 'ApiError';
   }
 }
-
-// 날짜 범위 계산 유틸리티 함수 추가
-const calculateDateRange = () => {
-  const today = new Date();
-  const currentYear = today.getFullYear();
-  const currentMonth = today.getMonth();
-
-  let startDate: Date;
-  let endDate: Date;
-
-  if (currentMonth >= 9) {
-    // 9월 이후: 현재 연도의 1월 1일부터 다음 연도 12월 31일까지
-    startDate = new Date(currentYear, 0, 1);
-    endDate = new Date(currentYear + 1, 11, 31);
-  } else if (currentMonth < 4) {
-    // 4월 이전: 지난해 9월 1일부터 현재 연도 12월 31일까지
-    startDate = new Date(currentYear - 1, 8, 1);
-    endDate = new Date(currentYear, 11, 31);
-  } else {
-    // 4월부터 8월 사이: 현재 연도의 1월 1일부터 현재 연도 12월 31일까지
-    startDate = new Date(currentYear, 0, 1);
-    endDate = new Date(currentYear, 11, 31);
-  }
-
-  return {
-    startDate: formatDate(startDate),
-    endDate: formatDate(endDate)
-  };
-};
 
 export const fetchApartmentInfo = async (
   params: Omit<ApartmentApiParams, 'serviceKey'>
@@ -66,8 +38,8 @@ export const fetchApartmentInfo = async (
       searchParams.append('cond[SUBSCRPT_AREA_CODE_NM::EQ]', areaName);
     }
 
-    // 날짜 범위 계산
-    const { startDate, endDate } = calculateDateRange();
+    // 날짜 범위 계산 (오늘 기준 1년 기간)
+    const { startDate, endDate } = calculateOneYearPeriod();
 
     // 날짜 파라미터 추가
     searchParams.append('cond[RCRIT_PBLANC_DE::GTE]', startDate);
