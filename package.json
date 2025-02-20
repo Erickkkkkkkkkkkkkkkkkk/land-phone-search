@@ -17,6 +17,7 @@
     "@shadcn/ui": "^0.0.4",
     "@types/lodash": "^4.17.15",
     "@types/react-datepicker": "^6.2.0",
+    "@vercel/speed-insights": "^1.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dash": "^4.8.0",
