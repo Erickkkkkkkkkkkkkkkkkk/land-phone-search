@@ -1,116 +1,67 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useChatStore } from '@/app/store/chatStore';
-import ApartmentCard from '@/app/components/ApartmentCard';
+import { Button } from '@/app/components/ui/button';
+import { Globe, Info } from 'lucide-react';
 import ApartmentDetailModal from '@/app/components/ApartmentDetailModal';
-import Pagination from '@/app/components/Pagination';
-import { ApartmentInfo } from '@/app/types/api';
+import { ApartmentInfo } from '@/app/types/apartment';
+import SaleStatusBadge from '@/app/components/SaleStatusBadge';
+import { getSaleStatus } from '@/app/utils/apartmentUtils';
+import { formatKoreanPhoneNumber } from '@/app/utils/format';
 
 export const ApartmentList = () => {
   const {
     apartmentList,
-    isLoading,
-    error,
     currentPage,
     setCurrentPage,
-    fetchApartments,
-    filters
+    filters,
+    isLoading,
+    error,
+    fetchApartments
   } = useChatStore();
 
   const [selectedApartment, setSelectedApartment] = React.useState<ApartmentInfo | null>(null);
-  const [filteredApts, setFilteredApts] = React.useState<ApartmentInfo[]>([]);
+  
+  // 화면 크기에 따른 페이지당 아이템 수 설정
+  const [itemsPerPage, setItemsPerPage] = React.useState(9);
 
-  // 페이지당 항목 수
-  const ITEMS_PER_PAGE = 10;
+  // 화면 크기 변경 감지
+  React.useEffect(() => {
+    const handleResize = () => {
+      // lg 브레이크포인트(1024px) 이상일 때 9개, 그 외에는 10개
+      setItemsPerPage(window.innerWidth >= 1024 ? 9 : 10);
+    };
 
-  // 분양 상태 필터링 함수
-  const getSaleStatus = React.useCallback((apt: ApartmentInfo) => {
-    const today = new Date();
-    const recDate = new Date(apt.RCRIT_PBLANC_DE);
-    const annDate = new Date(apt.PRZWNER_PRESNATN_DE);
+    // 초기 설정
+    handleResize();
 
-    if (today < recDate) return 'upcoming';
-    if (today > annDate) return 'completed';
-    return 'ongoing';
+    // 리사이즈 이벤트 리스너 등록
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // 필터링된 아파트 목록 (전체)
-  const filteredApartments = React.useMemo(() => {
-    console.log('apartmentList 변경됨:', apartmentList);
-    console.log('현재 필터 상태:', filters);
-
-    return apartmentList.filter((apt) => {
-      // 지역 필터링
-      const isRegionMatch = filters.region === '전체' || apt.SUBSCRPT_AREA_CODE_NM === filters.region;
-      
-      // 기간 필터링
-      let isPeriodMatch = true;
-      if (filters.period.startDate && filters.period.endDate) {
-        const filterStart = new Date(filters.period.startDate);
-        const filterEnd = new Date(filters.period.endDate);
-        const saleStart = new Date(apt.RCRIT_PBLANC_DE);
-        const saleEnd = new Date(apt.PRZWNER_PRESNATN_DE);
-        
-        isPeriodMatch = saleEnd >= filterStart && saleStart <= filterEnd;
-      }
-
-      // 분양 상태 필터링
-      const status = getSaleStatus(apt);
-      const isStatusMatch = (
-        (status === 'upcoming' && filters.saleStatus.upcoming) ||
-        (status === 'ongoing' && filters.saleStatus.ongoing) ||
-        (status === 'completed' && filters.saleStatus.completed)
-      );
-
-      // 디버깅: 분양완료 상태인 경우 상세 정보 출력
-      if (status === 'completed') {
-        console.log(`분양완료 아파트 정보:`, {
-          이름: apt.HOUSE_NM,
-          지역: apt.SUBSCRPT_AREA_CODE_NM,
-          모집공고일: apt.RCRIT_PBLANC_DE,
-          당첨자발표일: apt.PRZWNER_PRESNATN_DE,
-          상태매칭: isStatusMatch,
-          지역매칭: isRegionMatch,
-          기간매칭: isPeriodMatch
-        });
-      }
-
-      const isMatched = isRegionMatch && isPeriodMatch && isStatusMatch;
-      return isMatched;
+  // 필터링된 아파트 목록 계산
+  const filteredApartments = useMemo(() => {
+    return apartmentList.filter(apartment => {
+      const regionMatch = filters.region === '전체' || apartment.SUBSCRPT_AREA_CODE_NM === filters.region;
+      const saleStatus = getSaleStatus(apartment);
+      const statusMatch = filters.saleStatus[saleStatus];
+      return regionMatch && statusMatch;
     });
-  }, [apartmentList, filters, getSaleStatus]);
+  }, [apartmentList, filters]);
 
-  // 현재 페이지의 아파트 목록
-  const currentPageApartments = React.useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const endIndex = startIndex + ITEMS_PER_PAGE;
+  // 현재 페이지의 아파트 목록 계산
+  const currentPageApartments = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
     return filteredApartments.slice(startIndex, endIndex);
-  }, [filteredApartments, currentPage]);
+  }, [filteredApartments, currentPage, itemsPerPage]);
 
   // 총 페이지 수 계산
-  const totalPages = React.useMemo(() => {
-    return Math.ceil(filteredApartments.length / ITEMS_PER_PAGE);
-  }, [filteredApartments]);
-
-  // filteredApartments가 변경될 때마다 상태 업데이트
-  React.useEffect(() => {
-    console.log('필터링된 아파트 수:', filteredApartments.length);
-    console.log('필터링된 아파트 목록:', filteredApartments);
-    
-    // 분양완료 아파트 수 확인
-    const completedCount = filteredApartments.filter(
-      apt => getSaleStatus(apt) === 'completed'
-    ).length;
-    console.log('분양완료 아파트 수:', completedCount);
-
-    // 현재 페이지가 총 페이지 수를 초과하면 1페이지로 리셋
-    if (currentPage > totalPages && totalPages > 0) {
-      setCurrentPage(1);
-    }
-
-    setFilteredApts(currentPageApartments);
-  }, [filteredApartments, currentPageApartments, currentPage, totalPages, setCurrentPage, getSaleStatus]);
+  const totalFilteredPages = useMemo(() => {
+    return Math.ceil(filteredApartments.length / itemsPerPage);
+  }, [filteredApartments, itemsPerPage]);
 
   React.useEffect(() => {
     fetchApartments();
@@ -128,12 +79,12 @@ export const ApartmentList = () => {
     return (
       <div className="p-4 text-red-500 bg-red-50 rounded-lg">
         <p className="font-medium">오류가 발생했습니다</p>
-        <p className="text-sm mt-1">{error}</p>        
+        <p className="text-sm mt-1">{error}</p>
       </div>
     );
   }
 
-  if (filteredApts.length === 0) {
+  if (filteredApartments.length === 0) {
     return (
       <div className="p-8 text-center text-gray-500">
         <p>검색 조건에 맞는 분양 정보가 없습니다.</p>
@@ -141,32 +92,136 @@ export const ApartmentList = () => {
     );
   }
 
-  console.log('렌더링 시점의 filteredApts:', filteredApts);
-
   return (
     <div className="space-y-6 p-4">
       {/* 분양 정보 목록 */}
       <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        {filteredApts.map((apt) => (
-          <ApartmentCard
+        {currentPageApartments.map((apt) => (
+          <div
             key={`${apt.HOUSE_MANAGE_NO}-${apt.PBLANC_NO}`}
-            apartment={apt}
-            onDetailClick={setSelectedApartment}
-          />
+            className="bg-white rounded-lg shadow-sm border border-gray-300 p-6 hover:shadow-lg transition-shadow"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-xl font-semibold text-blue-500">{apt.HOUSE_NM}</h3>
+                <SaleStatusBadge 
+                  recruitmentDate={apt.RCRIT_PBLANC_DE}
+                  announcementDate={apt.PRZWNER_PRESNATN_DE}
+                />
+              </div>
+              <div className="flex gap-3">
+                {apt.RCRIT_PBLANC_URL && (
+                  <a
+                    href={apt.RCRIT_PBLANC_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-600 hover:text-blue-500"
+                    aria-label={`${apt.HOUSE_NM} 홈페이지 방문 (새 창)`}
+                  >
+                    <Globe className="w-6 h-6" />
+                  </a>
+                )}
+                <button
+                  onClick={() => setSelectedApartment(apt)}
+                  className="text-gray-600 hover:text-blue-500"
+                  aria-label={`${apt.HOUSE_NM} 분양정보 보기 (모달 팝업)`}
+                >
+                  <Info className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="text-sm">
+              {/* Section 1: 시행사 / 연락처 */}
+              <div className="p-2 border-t border-gray-300">
+                <div className="flex flex-row items-center">
+                  <span>
+                    {apt.BSNS_MBY_NM || 'N/A'} / {apt.MDHS_TELNO ? (
+                      <a href={`tel:${apt.MDHS_TELNO}`} className="text-blue-600 hover:underline">
+                        {formatKoreanPhoneNumber(apt.MDHS_TELNO)}
+                      </a>
+                    ) : 'N/A'}
+                  </span>
+                </div>
+              </div>
+              
+              {/* Section 2: 지역, 주택구분 */}
+              <div className="p-2 border-t border-gray-300">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex flex-row">
+                    <span className="font-medium text-gray-600">지역:</span>
+                    <span className="ml-2">{apt.SUBSCRPT_AREA_CODE_NM}</span>
+                  </div>
+                  <div className="flex flex-row">
+                    <span className="font-medium text-gray-600">주택구분:</span>
+                    <span className="ml-2">{apt.HOUSE_SECD_NM || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Section 3: 모집공고일, 당첨자발표 */}
+              <div className="p-2 border-t border-gray-300">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex flex-row">
+                    <span className="font-medium text-gray-600">모집공고일:</span>
+                    <span className="ml-2">{apt.RCRIT_PBLANC_DE}</span>
+                  </div>
+                  <div className="flex flex-row">
+                    <span className="font-medium text-gray-600">당첨자발표:</span>
+                    <span className="ml-2">{apt.PRZWNER_PRESNATN_DE}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         ))}
       </div>
 
       {/* 페이지네이션 */}
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-      />
+      <div className="flex flex-col md:flex-row justify-center items-center gap-4 mt-8">
+        <Button
+          onClick={() => setCurrentPage(currentPage - 1)}
+          disabled={currentPage === 1}
+          variant="outline"
+          className="w-full md:w-auto"
+        >
+          이전
+        </Button>
+        <span className="px-4 py-2 text-gray-600">
+          {currentPage} / {totalFilteredPages}
+        </span>
+        <Button
+          onClick={() => setCurrentPage(currentPage + 1)}
+          disabled={currentPage === totalFilteredPages}
+          variant="outline"
+          className="w-full md:w-auto"
+        >
+          다음
+        </Button>
+      </div>
 
-      {/* 상세 정보 모달 */}
       {selectedApartment && (
         <ApartmentDetailModal
-          apartment={selectedApartment}
+          apartment={{
+            HOUSE_MANAGE_NO: selectedApartment.HOUSE_MANAGE_NO,
+            PBLANC_NO: selectedApartment.PBLANC_NO,
+            HOUSE_NM: selectedApartment.HOUSE_NM,
+            RCRIT_PBLANC_DE: selectedApartment.RCRIT_PBLANC_DE,
+            PRZWNER_PRESNATN_DE: selectedApartment.PRZWNER_PRESNATN_DE,
+            SUBSCRPT_AREA_CODE: selectedApartment.SUBSCRPT_AREA_CODE_NM,
+            HOUSE_SECD: selectedApartment.HOUSE_SECD_NM,
+            HOUSE_DTL_SECD: selectedApartment.HOUSE_DTL_SECD_NM,
+            HSSPLY_ADRES: selectedApartment.HSSPLY_ADRES,
+            TOT_SUPLY_HSHLDCO: selectedApartment.TOT_SUPLY_HSHLDCO,
+            PBLANC_URL: selectedApartment.RCRIT_PBLANC_URL,
+            BSNS_MBY_NM: selectedApartment.BSNS_MBY_NM,
+            CNSTRCT_ENTRPS_NM: selectedApartment.CNSTRCT_ENTRPS_NM,
+            MDHS_TELNO: selectedApartment.MDHS_TELNO,
+            SPSPLY_RCEPT_BGNDE: selectedApartment.SPSPLY_RCEPT_BGNDE,
+            SPSPLY_RCEPT_ENDDE: selectedApartment.SPSPLY_RCEPT_ENDDE,
+            GNRL_RCEPT_BGNDE: selectedApartment.GNRL_RCEPT_BGNDE,
+            GNRL_RCEPT_ENDDE: selectedApartment.GNRL_RCEPT_ENDDE
+          } as import("@/app/types/api").ApartmentInfo}
           isOpen={true}
           onClose={() => setSelectedApartment(null)}
         />

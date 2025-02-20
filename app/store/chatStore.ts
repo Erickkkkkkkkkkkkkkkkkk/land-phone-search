@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { ApartmentInfo, ApartmentApiParams } from '../types/api';
+import { ApartmentInfo } from '../types/apartment';
+import { ApartmentApiParams } from '../types/api';
 import { fetchApartmentInfo } from '../services/apartmentService';
 import { ApiError } from '../services/apartmentService';
 
@@ -157,24 +158,28 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         'cond[RCRIT_PBLANC_DE::LTE]'?: string;
         'cond[RCRIT_PBLANC_DE::GTE]'?: string;
       } = {
-        page: 1, // 페이지 번호는 1로 고정
-        perPage: 1000, // 충분히 큰 수로 설정
+        page: 1,
+        perPage: 1000, // 임시로 큰 값을 설정
         SUBSCRPT_AREA_CODE_NM: filters.region !== '전체' ? filters.region : undefined,
       };
 
-      // 공고 기간 파라미터 계산 (오늘 날짜 기준으로 1년)
-      const today = new Date();
-      const currentYear = today.getFullYear();
-      const currentMonth = today.getMonth();
-      const computedStartDate = `${currentYear}-01-01`;
-      const computedEndDate = currentMonth >= 9 ? `${currentYear + 1}-12-31` : `${currentYear}-12-31`;
-      params['cond[RCRIT_PBLANC_DE::GTE]'] = computedStartDate;
-      params['cond[RCRIT_PBLANC_DE::LTE]'] = computedEndDate;
+      // 디버깅 로그
+      console.log('API 요청 파라미터:', params);
+      console.log('지역 선택 상태:', {
+        region: filters.region,
+        isValid: filters.region !== '전체',
+        paramValue: params.SUBSCRPT_AREA_CODE_NM
+      });
 
-      const response = await fetchApartmentInfo(params);
+      // 먼저 전체 데이터 수를 확인하기 위한 요청
+      const countResponse = await fetchApartmentInfo({
+        ...params,
+        perPage: 1
+      });
 
-      // 데이터가 없는 경우
-      if (!response.data?.length) {
+      const totalCount = countResponse.matchCount || 0;
+
+      if (totalCount === 0) {
         set({
           apartmentList: [],
           totalPages: 0,
@@ -185,9 +190,17 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         return;
       }
 
+      // 전체 데이터를 가져오기 위한 요청
+      const response = await fetchApartmentInfo({
+        ...params,
+        perPage: totalCount
+      });
+
       // 정상적인 경우
       set({
-        apartmentList: response.data,
+        apartmentList: response.data || [],
+        totalPages: 1, // 클라이언트 측에서 페이징 처리하므로 1로 설정
+        currentPage: 1,
         isLoading: false,
         error: null
       });
