@@ -148,7 +148,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   // API 관련 액션
   fetchApartments: async () => {
-    const { filters } = get();
+    const { filters, currentPage } = get();
     set({ isLoading: true, error: null });
 
     try {
@@ -161,7 +161,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
         set({
           apartmentList: filteredData,
-          totalPages: Math.ceil(filteredData.length / 10),
+          totalPages: Math.ceil(filteredData.length / 50),
           currentPage: 1,
           isLoading: false,
           error: filteredData.length === 0 ? '검색 조건에 맞는 분양 정보가 없습니다.' : null
@@ -175,7 +175,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         'cond[RCRIT_PBLANC_DE::GTE]'?: string;
       } = {
         page: currentPage,
-        perPage: 10,
+        perPage: 50, // 한 페이지당 50개씩 데이터 요청
         SUBSCRPT_AREA_CODE_NM: filters.region !== '전체' ? filters.region : undefined,
       };
 
@@ -186,7 +186,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
       // 실제 데이터 수에 기반한 페이지 계산
       const matchCount = response.matchCount || 0;
-      const totalPages = Math.ceil(matchCount / 10);
+      const totalPages = Math.ceil(matchCount / 50); // 50개씩 나누어 총 페이지 계산
       
       // 데이터가 없는 경우
       if (matchCount === 0) {
