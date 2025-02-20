@@ -1,25 +1,23 @@
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { useChatStore } from '@/app/store/chatStore';
 import { AREA_CODES } from '@/app/types/api';
 import { Button } from '@/app/components/ui/button';
 
-// 전역 변수: 최초 API 호출 여부를 추적
-let initialFetchDone = false;
-
 export const RegionSelect = () => {
   const { filters, setRegion, fetchApartments } = useChatStore();
+  const hasFetched = useRef(false);
 
   // 컴포넌트 마운트 시 최초 '전체' 데이터 로드
   React.useEffect(() => {
-    if (!initialFetchDone) {
+    if (!hasFetched.current) {
       console.log('Initial fetch for 전체');
       setRegion('전체');
       fetchApartments();
-      initialFetchDone = true;
+      hasFetched.current = true;
     }
-  }, []);
+  }, [setRegion, fetchApartments]);
 
   const handleRegionChange = (region: string) => {
     console.log('Selected region:', region);

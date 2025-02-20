@@ -1,7 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
-import { ApartmentInfo, ApartmentApiParams, AREA_CODES } from '../types/api';
+import { ApartmentInfo, ApartmentApiParams } from '../types/api';
 import { fetchApartmentInfo } from '../services/apartmentService';
 
 interface ChatMessage {
@@ -86,8 +86,7 @@ const useChatStore = create<ChatStore>((set, get) => ({
         // 지역 코드 변환
         const regionCode = state.selectedRegion;
         if (regionCode) {
-          // 명시적으로 cond[SUBSCRPT_AREA_CODE_NM::EQ] 파라미터 추가
-          requestParams['cond[SUBSCRPT_AREA_CODE_NM::EQ]'] = regionCode;
+          requestParams['SUBSCRPT_AREA_CODE_NM'] = regionCode;
         } else {
           console.warn(`지역 코드를 찾을 수 없음: ${state.selectedRegion}`);
         }
