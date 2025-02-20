@@ -1,71 +1,116 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useChatStore } from '@/app/store/chatStore';
 import { Button } from '@/app/components/ui/button';
 import { Globe, Info } from 'lucide-react';
 import ApartmentDetailModal from '@/app/components/ApartmentDetailModal';
-import { ApartmentInfo } from '@/app/types/apartment';
+import { ApartmentInfo } from '@/app/types/api';
 import SaleStatusBadge from '@/app/components/SaleStatusBadge';
-import { getSaleStatus } from '@/app/utils/apartmentUtils';
-import { formatKoreanPhoneNumber } from '@/app/utils/format';
 
 export const ApartmentList = () => {
   const {
     apartmentList,
     currentPage,
     setCurrentPage,
+    fetchApartments,
     filters,
     isLoading,
-    error,
-    fetchApartments
+    error
   } = useChatStore();
 
   const [selectedApartment, setSelectedApartment] = React.useState<ApartmentInfo | null>(null);
   
   // 화면 크기에 따른 페이지당 아이템 수 설정
-  const [itemsPerPage, setItemsPerPage] = React.useState(9);
+  const [itemsPerPage, setItemsPerPage] = React.useState<number>(typeof window !== 'undefined' && window.innerWidth >= 1024 ? 9 : 10);
 
-  // 화면 크기 변경 감지
+  React.useEffect(() => {
+    fetchApartments();
+  }, [currentPage, fetchApartments]);
+
   React.useEffect(() => {
     const handleResize = () => {
-      // lg 브레이크포인트(1024px) 이상일 때 9개, 그 외에는 10개
-      setItemsPerPage(window.innerWidth >= 1024 ? 9 : 10);
+      if (window.innerWidth >= 1024) {
+        setItemsPerPage(9);
+      } else {
+        setItemsPerPage(10);
+      }
     };
 
-    // 초기 설정
+    window.addEventListener('resize', handleResize);
     handleResize();
 
-    // 리사이즈 이벤트 리스너 등록
-    window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // 분양 상태 필터링 함수
+  const getSaleStatus = (apt: ApartmentInfo) => {
+    const today = new Date();
+    const recDate = new Date(apt.RCRIT_PBLANC_DE);
+    const annDate = new Date(apt.PRZWNER_PRESNATN_DE);
+
+    if (today < recDate) return 'upcoming';
+    if (today > annDate) return 'completed';
+    return 'ongoing';
+  };
+
   // 필터링된 아파트 목록 계산
-  const filteredApartments = useMemo(() => {
-    return apartmentList.filter(apartment => {
-      const regionMatch = filters.region === '전체' || apartment.SUBSCRPT_AREA_CODE_NM === filters.region;
-      const saleStatus = getSaleStatus(apartment);
-      const statusMatch = filters.saleStatus[saleStatus];
-      return regionMatch && statusMatch;
+  const filteredApartments = React.useMemo(() => {
+    return apartmentList.filter((apt) => {
+      // 지역 필터링
+      if (filters.region !== '전체' && apt.SUBSCRPT_AREA_CODE_NM !== filters.region) {
+        return false;
+      }
+
+      // 기간 필터링
+      if (filters.period.startDate && filters.period.endDate) {
+        const filterStart = new Date(filters.period.startDate);
+        const filterEnd = new Date(filters.period.endDate);
+        const saleStart = new Date(apt.RCRIT_PBLANC_DE);
+        const saleEnd = new Date(apt.PRZWNER_PRESNATN_DE);
+        
+        if (!(saleEnd >= filterStart && saleStart <= filterEnd)) {
+          return false;
+        }
+      }
+
+      // 분양 상태 필터링
+      const status = getSaleStatus(apt);
+      return filters.saleStatus[status];
     });
   }, [apartmentList, filters]);
 
   // 현재 페이지의 아파트 목록 계산
-  const currentPageApartments = useMemo(() => {
+  const currentPageApartments = React.useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     return filteredApartments.slice(startIndex, endIndex);
   }, [filteredApartments, currentPage, itemsPerPage]);
 
   // 총 페이지 수 계산
-  const totalFilteredPages = useMemo(() => {
+  const totalFilteredPages = React.useMemo(() => {
     return Math.ceil(filteredApartments.length / itemsPerPage);
   }, [filteredApartments, itemsPerPage]);
 
-  React.useEffect(() => {
-    fetchApartments();
-  }, [fetchApartments]);
+  const formatKoreanPhoneNumber = (phone: string): string => {
+    const cleaned = phone.replace(/\D/g, '');
+    if (cleaned.length === 8) {
+      return cleaned.replace(/(\d{4})(\d{4})/, '$1-$2');
+    } else if (cleaned.startsWith('02')) {
+      if (cleaned.length === 9) {
+        return cleaned.replace(/(\d{2})(\d{3})(\d{4})/, '$1-$2-$3');
+      } else if (cleaned.length === 10) {
+        return cleaned.replace(/(\d{2})(\d{4})(\d{4})/, '$1-$2-$3');
+      }
+    } else {
+      if (cleaned.length === 10) {
+        return cleaned.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+      } else if (cleaned.length === 11) {
+        return cleaned.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
+      }
+    }
+    return phone;
+  };
 
   if (isLoading) {
     return (
@@ -94,7 +139,6 @@ export const ApartmentList = () => {
 
   return (
     <div className="space-y-6 p-4">
-      {/* 분양 정보 목록 */}
       <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {currentPageApartments.map((apt) => (
           <div
@@ -110,9 +154,9 @@ export const ApartmentList = () => {
                 />
               </div>
               <div className="flex gap-3">
-                {apt.RCRIT_PBLANC_URL && (
+                {apt.PBLANC_URL && (
                   <a
-                    href={apt.RCRIT_PBLANC_URL}
+                    href={apt.PBLANC_URL}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-gray-600 hover:text-blue-500"
@@ -132,7 +176,6 @@ export const ApartmentList = () => {
             </div>
             
             <div className="text-sm">
-              {/* Section 1: 시행사 / 연락처 */}
               <div className="p-2 border-t border-gray-300">
                 <div className="flex flex-row items-center">
                   <span>
@@ -145,7 +188,6 @@ export const ApartmentList = () => {
                 </div>
               </div>
               
-              {/* Section 2: 지역, 주택구분 */}
               <div className="p-2 border-t border-gray-300">
                 <div className="grid grid-cols-2 gap-2">
                   <div className="flex flex-row">
@@ -159,7 +201,6 @@ export const ApartmentList = () => {
                 </div>
               </div>
               
-              {/* Section 3: 모집공고일, 당첨자발표 */}
               <div className="p-2 border-t border-gray-300">
                 <div className="grid grid-cols-2 gap-2">
                   <div className="flex flex-row">
@@ -177,7 +218,6 @@ export const ApartmentList = () => {
         ))}
       </div>
 
-      {/* 페이지네이션 */}
       <div className="flex flex-col md:flex-row justify-center items-center gap-4 mt-8">
         <Button
           onClick={() => setCurrentPage(currentPage - 1)}

@@ -1,30 +1,31 @@
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { useChatStore } from '@/app/store/chatStore';
 import { AREA_CODES } from '@/app/types/api';
 import { Button } from '@/app/components/ui/button';
 
 export const RegionSelect = () => {
   const { filters, setRegion, fetchApartments } = useChatStore();
+  const hasFetched = useRef(false);
+
+  // 컴포넌트 마운트 시 최초 '전체' 데이터 로드
+  React.useEffect(() => {
+    if (!hasFetched.current) {
+      console.log('Initial fetch for 전체');
+      setRegion('전체');
+      fetchApartments();
+      hasFetched.current = true;
+    }
+  }, [setRegion, fetchApartments]);
 
   const handleRegionChange = (region: string) => {
     console.log('Selected region:', region);
     setRegion(region);
-  };
-
-  // Use a ref to store the last fetched region to avoid duplicate API calls
-  const lastFetchedRegion = React.useRef<string | null>(null);
-
-  React.useEffect(() => {
-    // If the region hasn't changed since the last fetch, skip the API call
-    if (lastFetchedRegion.current === filters.region) {
-      return;
+    if (region === '전체') {
+      fetchApartments();
     }
-    lastFetchedRegion.current = filters.region;
-    console.log('Region filter changed:', filters.region);
-    fetchApartments();
-  }, [filters.region, fetchApartments]);
+  };
 
   return (
     <div className="w-full p-4">
