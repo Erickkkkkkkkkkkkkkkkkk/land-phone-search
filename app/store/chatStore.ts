@@ -148,7 +148,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   // API 관련 액션
   fetchApartments: async () => {
-    const { filters, currentPage } = get();
+    const { filters } = get();
     set({ isLoading: true, error: null });
 
     try {
@@ -164,19 +164,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         'cond[RCRIT_PBLANC_DE::LTE]'?: string;
         'cond[RCRIT_PBLANC_DE::GTE]'?: string;
       } = {
-        page: currentPage,
-        perPage: 10,
+        page: 1,
+        perPage: 1000, // 임시로 큰 값을 설정
         SUBSCRPT_AREA_CODE_NM: filters.region !== '전체' ? filters.region : undefined,
       };
-
-      // 공고 기간 파라미터 계산 (오늘 날짜 기준으로 1년)
-      const today = new Date();
-      const currentYear = today.getFullYear();
-      const currentMonth = today.getMonth();
-      const computedStartDate = `${currentYear}-01-01`;
-      const computedEndDate = currentMonth >= 9 ? `${currentYear + 1}-12-31` : `${currentYear}-12-31`;
-      params['cond[RCRIT_PBLANC_DE::GTE]'] = computedStartDate;
-      params['cond[RCRIT_PBLANC_DE::LTE]'] = computedEndDate;
 
       // 디버깅 로그
       console.log('API 요청 파라미터:', params);
@@ -186,14 +177,15 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         paramValue: params.SUBSCRPT_AREA_CODE_NM
       });
 
-      const response = await fetchApartmentInfo(params);
+      // 먼저 전체 데이터 수를 확인하기 위한 요청
+      const countResponse = await fetchApartmentInfo({
+        ...params,
+        perPage: 1
+      });
 
-      // 실제 데이터 수에 기반한 페이지 계산
-      const matchCount = response.matchCount || 0;
-      const totalPages = Math.ceil(matchCount / 10);
-      
-      // 데이터가 없는 경우
-      if (matchCount === 0) {
+      const totalCount = countResponse.matchCount || 0;
+
+      if (totalCount === 0) {
         set({
           apartmentList: [],
           totalPages: 0,
@@ -204,23 +196,17 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         return;
       }
 
-      // 현재 페이지가 총 페이지 수를 초과한 경우
-      if (currentPage > totalPages) {
-        set({
-          apartmentList: response.data || [],
-          totalPages,
-          currentPage: totalPages,
-          isLoading: false,
-          error: '마지막 페이지입니다.'
-        });
-        return;
-      }
+      // 전체 데이터를 가져오기 위한 요청
+      const response = await fetchApartmentInfo({
+        ...params,
+        perPage: totalCount
+      });
 
       // 정상적인 경우
       set({
         apartmentList: response.data || [],
-        totalPages,
-        currentPage,
+        totalPages: 1, // 클라이언트 측에서 페이징 처리하므로 1로 설정
+        currentPage: 1,
         isLoading: false,
         error: null
       });
