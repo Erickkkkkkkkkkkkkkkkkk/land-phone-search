@@ -25,8 +25,11 @@ export const ApartmentList = () => {
   const [itemsPerPage, setItemsPerPage] = React.useState<number>(typeof window !== 'undefined' && window.innerWidth >= 1024 ? 9 : 10);
 
   React.useEffect(() => {
-    fetchApartments();
-  }, [currentPage, fetchApartments]);
+    // 페이지 변경 시에만 API 호출 (전체 선택 상태일 때)
+    if (filters.region === '전체' && currentPage > 1) {
+      fetchApartments();
+    }
+  }, [currentPage, fetchApartments, filters.region]);
 
   React.useEffect(() => {
     const handleResize = () => {

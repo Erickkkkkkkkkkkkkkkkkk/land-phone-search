@@ -102,10 +102,17 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   // 필터 관련 액션
   setRegion: (region) => {
+    const newRegion = region || '전체';
     set((state) => ({
-      filters: { ...state.filters, region: region || '전체' },
+      filters: { ...state.filters, region: newRegion },
       currentPage: 1,
     }));
+
+    // 지역이 변경될 때마다 fetchApartments 호출
+    const store = get();
+    if (newRegion === '전체' || store.apartmentList.length === 0) {
+      store.fetchApartments();
+    }
   },
   
   setPeriod: (startDate: string | undefined, endDate: string | undefined) => {
