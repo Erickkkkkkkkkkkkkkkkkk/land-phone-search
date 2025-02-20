@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { ApartmentInfo, ApartmentApiParams } from '../types/api';
+import { ApartmentInfo } from '../types/api';
+import { ApartmentApiParams } from '../types/api';
 import { fetchApartmentInfo } from '../services/apartmentService';
 import { ApiError } from '../services/apartmentService';
 
@@ -156,7 +157,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       const currentData = get().apartmentList;
       if (filters.region !== '전체' && currentData.length > 0) {
         const filteredData = currentData.filter(
-          apt => apt.SUBSCRPT_AREA_CODE_NM === filters.region
+          apt => apt.SUBSCRPT_AREA_CODE === filters.region
         );
 
         set({
@@ -179,7 +180,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         SUBSCRPT_AREA_CODE_NM: filters.region !== '전체' ? filters.region : undefined,
       };
 
-      // 디버깅 로그
       console.log('API 요청 파라미터:', params);
 
       const response = await fetchApartmentInfo(params);
@@ -220,12 +220,11 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         isLoading: false,
         error: null
       });
-
     } catch (error) {
       console.error('Store Error:', error);
       set({
-        error: error instanceof ApiError 
-          ? error.message 
+        error: error instanceof ApiError
+          ? error.message
           : '분양 정보를 불러오는 중 오류가 발생했습니다.',
         isLoading: false,
         apartmentList: [],

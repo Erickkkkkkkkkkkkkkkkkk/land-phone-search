@@ -22,27 +22,20 @@ export interface ApartmentApiResponse {
 }
 
 export interface ApartmentInfo {
-  HOUSE_MANAGE_NO: string; // 주택관리번호
-  PBLANC_NO: string; // 공고번호
-  HOUSE_NM: string; // 주택명
-  HOUSE_SECD: string; // 주택구분
-  HOUSE_SECD_NM: string; // 주택구분명
-  HOUSE_DTL_SECD: string; // 주택상세구분
-  HOUSE_DTL_SECD_NM: string; // 주택상세구분명
-  SUBSCRPT_AREA_CODE: string; // 공급지역코드
-  SUBSCRPT_AREA_CODE_NM: string; // 공급지역명
-  RCRIT_PBLANC_DE: string; // 모집공고일
-  RCEPT_BGNDE: string; // 청약접수시작일
-  RCEPT_ENDDE: string; // 청약접수종료일
-  PRZWNER_PRESNATN_DE: string; // 당첨자발표일
-  CNTRCT_CNCLS_BGNDE: string; // 계약시작일
-  CNTRCT_CNCLS_ENDDE: string; // 계약종료일
-  HMPG_ADRES: string; // 홈페이지주소
-  PBLANC_URL: string; // 분양정보 URL
-  MDHS_TELNO: string; // 문의처
-  CNSTRCT_ENTRPS_NM: string; // 건설업체명
-  BSNS_MBY_NM: string; // 사업주체명(시공사)
-  MVN_PREARNGE_YM: string; // 입주예정월
+  HOUSE_MANAGE_NO: string;
+  PBLANC_NO: string;
+  HOUSE_NM: string;
+  RCRIT_PBLANC_DE: string;
+  PRZWNER_PRESNATN_DE: string;
+  HOUSE_SECD?: string;
+  HOUSE_DTL_SECD?: string;
+  SUBSCRPT_AREA_CODE?: string;
+  RCEPT_BGNDE?: string;
+  HSSPLY_ADRES?: string;
+  TOT_SUPLY_HSHLDCO?: string;
+  PBLANC_URL?: string;
+  BSNS_MBY_NM?: string;
+  MDHS_TELNO?: string;
 }
 
 export type AreaCode = keyof typeof AREA_CODES;

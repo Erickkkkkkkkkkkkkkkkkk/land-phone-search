@@ -1,3 +1,5 @@
+export * from './api';
+
 export interface ApartmentInfo {
   HOUSE_MANAGE_NO: string;           // 주택관리번호
   PBLANC_NO: string;                // 공고번호
