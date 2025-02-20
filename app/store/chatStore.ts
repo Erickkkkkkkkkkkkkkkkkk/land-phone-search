@@ -148,24 +148,17 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   // API 관련 액션
   fetchApartments: async () => {
-    const { filters, currentPage } = get();
+    const { filters } = get();
     set({ isLoading: true, error: null });
 
     try {
-      // 필터 상태 디버깅
-      console.log('현재 필터 상태:', {
-        region: filters.region,
-        period: filters.period,
-        isRegionValid: filters.region !== '전체',
-      });
-
       // API 요청 파라미터 구성
       const params: Omit<ApartmentApiParams, 'serviceKey'> & {
         'cond[RCRIT_PBLANC_DE::LTE]'?: string;
         'cond[RCRIT_PBLANC_DE::GTE]'?: string;
       } = {
-        page: currentPage,
-        perPage: 10,
+        page: 1, // 페이지 번호는 1로 고정
+        perPage: 1000, // 충분히 큰 수로 설정
         SUBSCRPT_AREA_CODE_NM: filters.region !== '전체' ? filters.region : undefined,
       };
 
@@ -178,22 +171,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       params['cond[RCRIT_PBLANC_DE::GTE]'] = computedStartDate;
       params['cond[RCRIT_PBLANC_DE::LTE]'] = computedEndDate;
 
-      // 디버깅 로그
-      console.log('API 요청 파라미터:', params);
-      console.log('지역 선택 상태:', {
-        region: filters.region,
-        isValid: filters.region !== '전체',
-        paramValue: params.SUBSCRPT_AREA_CODE_NM
-      });
-
       const response = await fetchApartmentInfo(params);
 
-      // 실제 데이터 수에 기반한 페이지 계산
-      const matchCount = response.matchCount || 0;
-      const totalPages = Math.ceil(matchCount / 10);
-      
       // 데이터가 없는 경우
-      if (matchCount === 0) {
+      if (!response.data?.length) {
         set({
           apartmentList: [],
           totalPages: 0,
@@ -204,23 +185,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         return;
       }
 
-      // 현재 페이지가 총 페이지 수를 초과한 경우
-      if (currentPage > totalPages) {
-        set({
-          apartmentList: response.data || [],
-          totalPages,
-          currentPage: totalPages,
-          isLoading: false,
-          error: '마지막 페이지입니다.'
-        });
-        return;
-      }
-
       // 정상적인 경우
       set({
-        apartmentList: response.data || [],
-        totalPages,
-        currentPage,
+        apartmentList: response.data,
         isLoading: false,
         error: null
       });

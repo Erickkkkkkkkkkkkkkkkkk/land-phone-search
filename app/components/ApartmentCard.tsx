@@ -15,6 +15,8 @@ export const ApartmentCard: React.FC<ApartmentCardProps> = React.memo(({
   apartment: apt, 
   onDetailClick 
 }) => {
+  console.log('ApartmentCard rendered with apartment:', apt);
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-300 p-6 hover:shadow-lg transition-shadow">
       <div className="flex items-center justify-between mb-4">
