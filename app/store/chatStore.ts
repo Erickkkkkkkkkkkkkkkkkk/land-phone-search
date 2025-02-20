@@ -148,25 +148,34 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   // API 관련 액션
   fetchApartments: async () => {
-    const { filters, currentPage } = get();
+    const { filters } = get();
     set({ isLoading: true, error: null });
 
     try {
-      // 필터 상태 디버깅
-      console.log('현재 필터 상태:', {
-        region: filters.region,
-        period: filters.period,
-        isRegionValid: filters.region !== '전체',
-      });
+      // '전체'가 아닌 경우, 기존 데이터를 필터링하여 사용
+      const currentData = get().apartmentList;
+      if (filters.region !== '전체' && currentData.length > 0) {
+        const filteredData = currentData.filter(
+          apt => apt.SUBSCRPT_AREA_CODE_NM === filters.region
+        );
 
-      // API 요청 파라미터 구성
+        set({
+          apartmentList: filteredData,
+          totalPages: Math.ceil(filteredData.length / 10),
+          currentPage: 1,
+          isLoading: false,
+          error: filteredData.length === 0 ? '검색 조건에 맞는 분양 정보가 없습니다.' : null
+        });
+        return;
+      }
+
+      // '전체' 선택 시 또는 초기 데이터가 없는 경우에만 API 호출
       const params: Omit<ApartmentApiParams, 'serviceKey'> & {
         'cond[RCRIT_PBLANC_DE::LTE]'?: string;
         'cond[RCRIT_PBLANC_DE::GTE]'?: string;
       } = {
-        page: currentPage,
-        perPage: 10,
-        SUBSCRPT_AREA_CODE_NM: filters.region !== '전체' ? filters.region : undefined,
+        page: 1,
+        perPage: 1000, // 전체 데이터를 한 번에 가져옴
       };
 
       // 공고 기간 파라미터 계산 (오늘 날짜 기준으로 1년)
@@ -180,19 +189,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
       // 디버깅 로그
       console.log('API 요청 파라미터:', params);
-      console.log('지역 선택 상태:', {
-        region: filters.region,
-        isValid: filters.region !== '전체',
-        paramValue: params.SUBSCRPT_AREA_CODE_NM
-      });
 
       const response = await fetchApartmentInfo(params);
-
-      // 실제 데이터 수에 기반한 페이지 계산
       const matchCount = response.matchCount || 0;
-      const totalPages = Math.ceil(matchCount / 10);
       
-      // 데이터가 없는 경우
       if (matchCount === 0) {
         set({
           apartmentList: [],
@@ -204,23 +204,36 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         return;
       }
 
-      // 현재 페이지가 총 페이지 수를 초과한 경우
-      if (currentPage > totalPages) {
-        set({
-          apartmentList: response.data || [],
-          totalPages,
-          currentPage: totalPages,
-          isLoading: false,
-          error: '마지막 페이지입니다.'
-        });
-        return;
-      }
+      // API 응답 데이터 변환
+      const convertedData: ApartmentInfo[] = (response.data || []).map((item: Partial<ApartmentInfo>) => ({
+        HOUSE_MANAGE_NO: item.HOUSE_MANAGE_NO || '',
+        PBLANC_NO: item.PBLANC_NO || '',
+        HOUSE_NM: item.HOUSE_NM || '',
+        HOUSE_SECD: item.HOUSE_SECD || '',
+        HOUSE_SECD_NM: item.HOUSE_SECD_NM || '',
+        HOUSE_DTL_SECD: item.HOUSE_DTL_SECD || '',
+        HOUSE_DTL_SECD_NM: item.HOUSE_DTL_SECD_NM || '',
+        SUBSCRPT_AREA_CODE: item.SUBSCRPT_AREA_CODE || '',
+        SUBSCRPT_AREA_CODE_NM: item.SUBSCRPT_AREA_CODE_NM || '',
+        RCRIT_PBLANC_DE: item.RCRIT_PBLANC_DE || '',
+        RCEPT_BGNDE: item.RCEPT_BGNDE || '',
+        RCEPT_ENDDE: item.RCEPT_ENDDE || '',
+        PRZWNER_PRESNATN_DE: item.PRZWNER_PRESNATN_DE || '',
+        CNTRCT_CNCLS_BGNDE: item.CNTRCT_CNCLS_BGNDE || '',
+        CNTRCT_CNCLS_ENDDE: item.CNTRCT_CNCLS_ENDDE || '',
+        HMPG_ADRES: item.HMPG_ADRES || '',
+        PBLANC_URL: item.PBLANC_URL || '',
+        MDHS_TELNO: item.MDHS_TELNO || '',
+        CNSTRCT_ENTRPS_NM: item.CNSTRCT_ENTRPS_NM || '',
+        BSNS_MBY_NM: item.BSNS_MBY_NM || '',
+        MVN_PREARNGE_YM: item.MVN_PREARNGE_YM || ''
+      }));
 
-      // 정상적인 경우
+      // 정상적인 경우 상태 업데이트
       set({
-        apartmentList: response.data || [],
-        totalPages,
-        currentPage,
+        apartmentList: convertedData,
+        totalPages: Math.ceil(matchCount / 10),
+        currentPage: 1,
         isLoading: false,
         error: null
       });
