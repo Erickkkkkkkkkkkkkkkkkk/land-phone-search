@@ -13,13 +13,15 @@ export const RegionSelect = () => {
     setRegion(region);
   };
 
-  // useRef를 사용하여 첫 렌더에서는 API 호출을 피함
-  const isFirstRender = React.useRef(true);
+  // Use a ref to store the last fetched region to avoid duplicate API calls
+  const lastFetchedRegion = React.useRef<string | null>(null);
+
   React.useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
+    // If the region hasn't changed since the last fetch, skip the API call
+    if (lastFetchedRegion.current === filters.region) {
       return;
     }
+    lastFetchedRegion.current = filters.region;
     console.log('Region filter changed:', filters.region);
     fetchApartments();
   }, [filters.region, fetchApartments]);

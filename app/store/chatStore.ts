@@ -149,21 +149,26 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   // API 관련 액션
   fetchApartments: async () => {
+    // Guard: if an API call is already in progress, skip duplicate call
+    if (get().isLoading) {
+      console.log('fetchApartments: already in progress, skipping duplicate call');
+      return;
+    }
+    
     const { filters } = get();
     set({ isLoading: true, error: null });
 
     try {
-      // API 요청 파라미터 구성
+      // API 요청 파라미터 구성: 충분히 큰 perPage 값을 사용하여 단 한 번의 호출로 전체 데이터를 가져옴
       const params: Omit<ApartmentApiParams, 'serviceKey'> & {
         'cond[RCRIT_PBLANC_DE::LTE]'?: string;
         'cond[RCRIT_PBLANC_DE::GTE]'?: string;
       } = {
         page: 1,
-        perPage: 1000, // 임시로 큰 값을 설정
+        perPage: 1000,
         SUBSCRPT_AREA_CODE_NM: filters.region !== '전체' ? filters.region : undefined,
       };
 
-      // 디버깅 로그
       console.log('API 요청 파라미터:', params);
       console.log('지역 선택 상태:', {
         region: filters.region,
@@ -171,32 +176,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         paramValue: params.SUBSCRPT_AREA_CODE_NM
       });
 
-      // 먼저 전체 데이터 수를 확인하기 위한 요청
-      const countResponse = await fetchApartmentInfo({
-        ...params,
-        perPage: 1
-      });
+      // 단 한 번의 API 호출로 전체 데이터를 가져옵니다.
+      const response = await fetchApartmentInfo(params);
 
-      const totalCount = countResponse.matchCount || 0;
-
-      if (totalCount === 0) {
-        set({
-          apartmentList: [],
-          totalPages: 0,
-          currentPage: 1,
-          isLoading: false,
-          error: '검색 조건에 맞는 분양 정보가 없습니다.'
-        });
-        return;
-      }
-
-      // 전체 데이터를 가져오기 위한 요청
-      const response = await fetchApartmentInfo({
-        ...params,
-        perPage: totalCount
-      });
-
-      // API 응답 데이터를 변환하여 타입 불일치를 해소
+      // 변환: API 응답 데이터의 data를 직접 사용
       const convertedData: ApartmentInfo[] = (response.data || []).map((item: Partial<ApartmentInfo>) => ({
         HOUSE_MANAGE_NO: item.HOUSE_MANAGE_NO || '',
         PBLANC_NO: item.PBLANC_NO || '',
@@ -218,20 +201,22 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         GNRL_RCEPT_ENDDE: item.GNRL_RCEPT_ENDDE
       }));
 
-      // 정상적인 경우
+      // totalPages 계산 using matchCount
+      const totalCount = response.matchCount || 0;
+      const totalPages = Math.ceil(totalCount / params.perPage);
+
       set({
         apartmentList: convertedData,
-        totalPages: 1, // 클라이언트 측에서 페이징 처리하므로 1로 설정
+        totalPages: totalPages,
         currentPage: 1,
         isLoading: false,
         error: null
       });
-
     } catch (error) {
       console.error('Store Error:', error);
       set({
-        error: error instanceof ApiError 
-          ? error.message 
+        error: error instanceof ApiError
+          ? error.message
           : '분양 정보를 불러오는 중 오류가 발생했습니다.',
         isLoading: false,
         apartmentList: [],
