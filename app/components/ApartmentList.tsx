@@ -202,26 +202,7 @@ export const ApartmentList = () => {
 
       {selectedApartment && (
         <ApartmentDetailModal
-          apartment={{
-            HOUSE_MANAGE_NO: selectedApartment.HOUSE_MANAGE_NO,
-            PBLANC_NO: selectedApartment.PBLANC_NO,
-            HOUSE_NM: selectedApartment.HOUSE_NM,
-            RCRIT_PBLANC_DE: selectedApartment.RCRIT_PBLANC_DE,
-            PRZWNER_PRESNATN_DE: selectedApartment.PRZWNER_PRESNATN_DE,
-            SUBSCRPT_AREA_CODE: selectedApartment.SUBSCRPT_AREA_CODE_NM,
-            HOUSE_SECD: selectedApartment.HOUSE_SECD_NM,
-            HOUSE_DTL_SECD: selectedApartment.HOUSE_DTL_SECD_NM,
-            HSSPLY_ADRES: selectedApartment.HSSPLY_ADRES,
-            TOT_SUPLY_HSHLDCO: selectedApartment.TOT_SUPLY_HSHLDCO,
-            PBLANC_URL: selectedApartment.RCRIT_PBLANC_URL,
-            BSNS_MBY_NM: selectedApartment.BSNS_MBY_NM,
-            CNSTRCT_ENTRPS_NM: selectedApartment.CNSTRCT_ENTRPS_NM,
-            MDHS_TELNO: selectedApartment.MDHS_TELNO,
-            SPSPLY_RCEPT_BGNDE: selectedApartment.SPSPLY_RCEPT_BGNDE,
-            SPSPLY_RCEPT_ENDDE: selectedApartment.SPSPLY_RCEPT_ENDDE,
-            GNRL_RCEPT_BGNDE: selectedApartment.GNRL_RCEPT_BGNDE,
-            GNRL_RCEPT_ENDDE: selectedApartment.GNRL_RCEPT_ENDDE
-          } as import("@/app/types/api").ApartmentInfo}
+          apartment={(selectedApartment as unknown) as import("@/app/types/api").ApartmentInfo}
           isOpen={true}
           onClose={() => setSelectedApartment(null)}
         />

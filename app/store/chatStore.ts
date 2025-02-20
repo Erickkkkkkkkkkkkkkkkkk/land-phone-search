@@ -196,9 +196,31 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         perPage: totalCount
       });
 
+      // API 응답 데이터를 변환하여 타입 불일치를 해소
+      const convertedData: ApartmentInfo[] = (response.data || []).map((item: Partial<ApartmentInfo>) => ({
+        HOUSE_MANAGE_NO: item.HOUSE_MANAGE_NO || '',
+        PBLANC_NO: item.PBLANC_NO || '',
+        HOUSE_NM: item.HOUSE_NM || '',
+        RCRIT_PBLANC_DE: item.RCRIT_PBLANC_DE || '',
+        PRZWNER_PRESNATN_DE: item.PRZWNER_PRESNATN_DE || '',
+        SUBSCRPT_AREA_CODE_NM: item.SUBSCRPT_AREA_CODE_NM || '',
+        HOUSE_SECD_NM: item.HOUSE_SECD_NM || '',
+        HOUSE_DTL_SECD_NM: item.HOUSE_DTL_SECD_NM || '',
+        HSSPLY_ADRES: item.HSSPLY_ADRES || '',
+        TOT_SUPLY_HSHLDCO: item.TOT_SUPLY_HSHLDCO || 0,
+        RCRIT_PBLANC_URL: item.RCRIT_PBLANC_URL || '',
+        BSNS_MBY_NM: item.BSNS_MBY_NM || '',
+        CNSTRCT_ENTRPS_NM: item.CNSTRCT_ENTRPS_NM || '',
+        MDHS_TELNO: item.MDHS_TELNO || '',
+        SPSPLY_RCEPT_BGNDE: item.SPSPLY_RCEPT_BGNDE,
+        SPSPLY_RCEPT_ENDDE: item.SPSPLY_RCEPT_ENDDE,
+        GNRL_RCEPT_BGNDE: item.GNRL_RCEPT_BGNDE,
+        GNRL_RCEPT_ENDDE: item.GNRL_RCEPT_ENDDE
+      }));
+
       // 정상적인 경우
       set({
-        apartmentList: response.data || [],
+        apartmentList: convertedData,
         totalPages: 1, // 클라이언트 측에서 페이징 처리하므로 1로 설정
         currentPage: 1,
         isLoading: false,
