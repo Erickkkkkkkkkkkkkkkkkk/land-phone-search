@@ -13,18 +13,14 @@ export const RegionSelect = () => {
   React.useEffect(() => {
     if (!hasFetched.current) {
       console.log('Initial fetch for 전체');
-      setRegion('전체');
-      fetchApartments();
       hasFetched.current = true;
+      fetchApartments();
     }
-  }, [setRegion, fetchApartments]);
+  }, [fetchApartments]);
 
   const handleRegionChange = (region: string) => {
     console.log('Selected region:', region);
     setRegion(region);
-    if (region === '전체') {
-      fetchApartments();
-    }
   };
 
   return (

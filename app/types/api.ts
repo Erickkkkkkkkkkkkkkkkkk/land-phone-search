@@ -30,6 +30,7 @@ export interface ApartmentInfo {
   HOUSE_SECD?: string;
   HOUSE_DTL_SECD?: string;
   SUBSCRPT_AREA_CODE?: string;
+  SUBSCRPT_AREA_CODE_NM?: string;
   RCEPT_BGNDE?: string;
   HSSPLY_ADRES?: string;
   TOT_SUPLY_HSHLDCO?: string;

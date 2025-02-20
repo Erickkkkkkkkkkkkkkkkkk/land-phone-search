@@ -25,8 +25,11 @@ export const ApartmentList = () => {
   const [itemsPerPage, setItemsPerPage] = React.useState<number>(typeof window !== 'undefined' && window.innerWidth >= 1024 ? 9 : 10);
 
   React.useEffect(() => {
-    fetchApartments();
-  }, [currentPage, fetchApartments]);
+    // 페이지 변경 시에만 API 호출 (전체 선택 상태일 때)
+    if (filters.region === '전체' && currentPage > 1) {
+      fetchApartments();
+    }
+  }, [currentPage, fetchApartments, filters.region]);
 
   React.useEffect(() => {
     const handleResize = () => {
@@ -58,7 +61,7 @@ export const ApartmentList = () => {
   const filteredApartments = React.useMemo(() => {
     return apartmentList.filter((apt) => {
       // 지역 필터링
-      if (filters.region !== '전체' && apt.SUBSCRPT_AREA_CODE !== filters.region) {
+      if (filters.region !== '전체' && apt.SUBSCRPT_AREA_CODE_NM !== filters.region) {
         return false;
       }
 
@@ -192,7 +195,7 @@ export const ApartmentList = () => {
                 <div className="grid grid-cols-2 gap-2">
                   <div className="flex flex-row">
                     <span className="font-medium text-gray-600">지역:</span>
-                    <span className="ml-2">{apt.SUBSCRPT_AREA_CODE}</span>
+                    <span className="ml-2">{apt.SUBSCRPT_AREA_CODE_NM}</span>
                   </div>
                   <div className="flex flex-row">
                     <span className="font-medium text-gray-600">주택구분:</span>
