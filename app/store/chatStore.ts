@@ -164,7 +164,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       const currentData = get().apartmentList;
       if (filters.region !== '전체' && currentData.length > 0) {
         const filteredData = currentData.filter(
-          apt => apt.SUBSCRPT_AREA_CODE === filters.region
+          apt => apt.SUBSCRPT_AREA_CODE_NM === filters.region
         );
 
         set({
@@ -178,14 +178,15 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       }
 
       // '전체' 선택 시 또는 초기 데이터가 없는 경우에만 API 호출
-      const params: Omit<ApartmentApiParams, 'serviceKey'> & {
-        'cond[RCRIT_PBLANC_DE::LTE]'?: string;
-        'cond[RCRIT_PBLANC_DE::GTE]'?: string;
-      } = {
+      const params: Omit<ApartmentApiParams, 'serviceKey'> = {
         page: currentPage,
         perPage: 50, // 한 페이지당 50개씩 데이터 요청
-        SUBSCRPT_AREA_CODE_NM: filters.region !== '전체' ? filters.region : undefined,
       };
+
+      // 지역 선택 시 지역명 추가
+      if (filters.region !== '전체') {
+        params.SUBSCRPT_AREA_CODE_NM = filters.region;
+      }
 
       console.log('API 요청 파라미터:', params);
 

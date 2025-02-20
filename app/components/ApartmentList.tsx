@@ -61,7 +61,7 @@ export const ApartmentList = () => {
   const filteredApartments = React.useMemo(() => {
     return apartmentList.filter((apt) => {
       // 지역 필터링
-      if (filters.region !== '전체' && apt.SUBSCRPT_AREA_CODE !== filters.region) {
+      if (filters.region !== '전체' && apt.SUBSCRPT_AREA_CODE_NM !== filters.region) {
         return false;
       }
 
@@ -195,7 +195,7 @@ export const ApartmentList = () => {
                 <div className="grid grid-cols-2 gap-2">
                   <div className="flex flex-row">
                     <span className="font-medium text-gray-600">지역:</span>
-                    <span className="ml-2">{apt.SUBSCRPT_AREA_CODE}</span>
+                    <span className="ml-2">{apt.SUBSCRPT_AREA_CODE_NM}</span>
                   </div>
                   <div className="flex flex-row">
                     <span className="font-medium text-gray-600">주택구분:</span>
