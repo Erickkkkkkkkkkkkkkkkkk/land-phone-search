@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { ApartmentInfo } from '../types/apartment';
+import { ApartmentInfo } from '../types/api';
 import { ApartmentApiParams } from '../types/api';
 import { fetchApartmentInfo } from '../services/apartmentService';
 import { ApiError } from '../services/apartmentService';
@@ -157,7 +157,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       const currentData = get().apartmentList;
       if (filters.region !== '전체' && currentData.length > 0) {
         const filteredData = currentData.filter(
-          apt => apt.SUBSCRPT_AREA_CODE_NM === filters.region
+          apt => apt.SUBSCRPT_AREA_CODE === filters.region
         );
 
         set({

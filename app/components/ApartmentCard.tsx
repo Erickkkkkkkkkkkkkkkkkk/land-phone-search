@@ -28,9 +28,9 @@ export const ApartmentCard: React.FC<ApartmentCardProps> = React.memo(({
           />
         </div>
         <div className="flex gap-3">
-          {apt.HMPG_ADRES && (
+          {apt.PBLANC_URL && (
             <a
-              href={apt.HMPG_ADRES}
+              href={apt.PBLANC_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-600 hover:text-blue-500"
@@ -70,11 +70,11 @@ export const ApartmentCard: React.FC<ApartmentCardProps> = React.memo(({
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-row">
               <span className="font-medium text-gray-600">지역:</span>
-              <span className="ml-2">{apt.SUBSCRPT_AREA_CODE_NM}</span>
+              <span className="ml-2">{apt.SUBSCRPT_AREA_CODE}</span>
             </div>
             <div className="flex flex-row">
               <span className="font-medium text-gray-600">주택구분:</span>
-              <span className="ml-2">{apt.HOUSE_SECD_NM || 'N/A'}</span>
+              <span className="ml-2">{apt.HOUSE_SECD || 'N/A'}</span>
             </div>
           </div>
         </div>
@@ -96,20 +96,7 @@ export const ApartmentCard: React.FC<ApartmentCardProps> = React.memo(({
         {/* Section 4: 계약기간, 입주예정 */}
         <div className="p-2 border-t border-gray-300">
           <div className="space-y-2">
-            <div className="flex flex-row">
-              <span className="font-medium text-gray-600">계약기간:</span>
-              <span className="ml-2">
-                {apt.CNTRCT_CNCLS_BGNDE && apt.CNTRCT_CNCLS_ENDDE
-                  ? `${apt.CNTRCT_CNCLS_BGNDE} ~ ${apt.CNTRCT_CNCLS_ENDDE}`
-                  : 'N/A'}
-              </span>
-            </div>
-            <div className="flex items-center">
-              <span className="font-medium text-gray-600">입주예정:</span>
-              <span className="ml-2 text-white bg-blue-800 px-3 py-1 rounded-full font-semibold">
-                {apt.MVN_PREARNGE_YM ? `${apt.MVN_PREARNGE_YM.slice(0,4)}년 ${apt.MVN_PREARNGE_YM.slice(4)}월` : 'N/A'}
-              </span>
-            </div>
+            {/* Contract info removed */}
           </div>
         </div>
       </div>

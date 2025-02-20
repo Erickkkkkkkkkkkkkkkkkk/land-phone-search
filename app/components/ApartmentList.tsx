@@ -58,7 +58,7 @@ export const ApartmentList = () => {
   const filteredApartments = React.useMemo(() => {
     return apartmentList.filter((apt) => {
       // 지역 필터링
-      if (filters.region !== '전체' && apt.SUBSCRPT_AREA_CODE_NM !== filters.region) {
+      if (filters.region !== '전체' && apt.SUBSCRPT_AREA_CODE !== filters.region) {
         return false;
       }
 
@@ -192,11 +192,11 @@ export const ApartmentList = () => {
                 <div className="grid grid-cols-2 gap-2">
                   <div className="flex flex-row">
                     <span className="font-medium text-gray-600">지역:</span>
-                    <span className="ml-2">{apt.SUBSCRPT_AREA_CODE_NM}</span>
+                    <span className="ml-2">{apt.SUBSCRPT_AREA_CODE}</span>
                   </div>
                   <div className="flex flex-row">
                     <span className="font-medium text-gray-600">주택구분:</span>
-                    <span className="ml-2">{apt.HOUSE_SECD_NM || 'N/A'}</span>
+                    <span className="ml-2">{apt.HOUSE_SECD || 'N/A'}</span>
                   </div>
                 </div>
               </div>
@@ -242,7 +242,7 @@ export const ApartmentList = () => {
 
       {selectedApartment && (
         <ApartmentDetailModal
-          apartment={(selectedApartment as unknown) as import("@/app/types/api").ApartmentInfo}
+          apartment={selectedApartment as unknown as import("@/app/types/api").ApartmentInfo}
           isOpen={true}
           onClose={() => setSelectedApartment(null)}
         />
