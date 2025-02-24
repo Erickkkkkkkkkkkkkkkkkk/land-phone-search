@@ -6,17 +6,17 @@ import { AREA_CODES } from '@/app/types/api';
 import { Button } from '@/app/components/ui/button';
 
 export const RegionSelect = () => {
-  const { filters, setRegion, fetchApartments } = useChatStore();
+  const { filters, setRegion } = useChatStore();
   const hasFetched = useRef(false);
 
   // 컴포넌트 마운트 시 최초 '전체' 데이터 로드
   React.useEffect(() => {
     if (!hasFetched.current) {
       console.log('Initial fetch for 전체');
+      setRegion('전체');
       hasFetched.current = true;
-      fetchApartments();
     }
-  }, [fetchApartments]);
+  }, [setRegion]);
 
   const handleRegionChange = (region: string) => {
     console.log('Selected region:', region);
