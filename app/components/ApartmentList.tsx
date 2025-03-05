@@ -171,9 +171,9 @@ export const ApartmentList = () => {
                 />
               </div>
               <div className="flex gap-3">
-                {apt.PBLANC_URL && (
+                {apt.HMPG_ADRES && (
                   <a
-                    href={apt.PBLANC_URL}
+                    href={apt.HMPG_ADRES}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-gray-600 hover:text-blue-500"
@@ -182,13 +182,15 @@ export const ApartmentList = () => {
                     <Globe className="w-6 h-6" />
                   </a>
                 )}
-                <button
-                  onClick={() => setSelectedApartment(apt)}
-                  className="text-gray-600 hover:text-blue-500"
-                  aria-label={`${apt.HOUSE_NM} 분양정보 보기 (모달 팝업)`}
-                >
-                  <Info className="w-6 h-6" />
-                </button>
+                {apt.PBLANC_URL && (
+                  <button
+                    onClick={() => setSelectedApartment(apt)}
+                    className="text-gray-600 hover:text-blue-500"
+                    aria-label={`${apt.HOUSE_NM} 분양정보 보기 (모달 팝업)`}
+                  >
+                    <Info className="w-6 h-6" />
+                  </button>
+                )}
               </div>
             </div>
             
