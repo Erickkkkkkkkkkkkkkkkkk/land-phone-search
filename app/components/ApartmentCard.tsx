@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Globe, Info } from 'lucide-react';
-import { ApartmentInfo } from '@/app/types/api';
+import { ApartmentInfo, HOUSE_CODES } from '@/app/types/api';
 import SaleStatusBadge from '@/app/components/SaleStatusBadge';
 import { formatKoreanPhoneNumber } from '@/app/utils/format';
 
@@ -10,6 +10,20 @@ interface ApartmentCardProps {
   apartment: ApartmentInfo;
   onDetailClick: (apartment: ApartmentInfo) => void;
 }
+
+// 주택구분 코드를 이름으로 변환하는 함수 추가
+const getHouseTypeName = (code?: string): string => {
+  if (!code) return 'N/A';
+  
+  // HOUSE_CODES 객체의 키-값 쌍을 순회하며 코드에 해당하는 이름 찾기
+  for (const [name, houseCode] of Object.entries(HOUSE_CODES)) {
+    if (houseCode === code) {
+      return name;
+    }
+  }
+  
+  return code; // 매칭되는 코드가 없으면 원래 코드 반환
+};
 
 export const ApartmentCard: React.FC<ApartmentCardProps> = React.memo(({ 
   apartment: apt, 
@@ -74,7 +88,7 @@ export const ApartmentCard: React.FC<ApartmentCardProps> = React.memo(({
             </div>
             <div className="flex flex-row">
               <span className="font-medium text-gray-600">주택구분:</span>
-              <span className="ml-2">{apt.HOUSE_SECD || 'N/A'}</span>
+              <span className="ml-2">{getHouseTypeName(apt.HOUSE_SECD) || 'N/A'}</span>
             </div>
           </div>
         </div>

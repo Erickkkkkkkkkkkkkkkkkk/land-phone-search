@@ -160,9 +160,11 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      // '전체'가 아닌 경우, 기존 데이터를 필터링하여 사용
+      // 현재 저장된 전체 데이터
       const currentData = get().apartmentList;
-      if (filters.region !== '전체' && currentData.length > 0) {
+
+      // 지역 필터링이 필요한 경우
+      if (filters.region !== '전체') {
         const filteredData = currentData.filter(
           apt => apt.SUBSCRPT_AREA_CODE_NM === filters.region
         );
@@ -177,57 +179,45 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         return;
       }
 
-      // '전체' 선택 시 또는 초기 데이터가 없는 경우에만 API 호출
-      const params: Omit<ApartmentApiParams, 'serviceKey'> = {
-        page: currentPage,
-        perPage: 50, // 한 페이지당 50개씩 데이터 요청
-      };
+      // 초기 데이터가 없는 경우에만 API 호출
+      if (currentData.length === 0) {
+        const params: Omit<ApartmentApiParams, 'serviceKey'> = {
+          page: currentPage,
+          perPage: 50,
+        };
 
-      // 지역 선택 시 지역명 추가
-      if (filters.region !== '전체') {
-        params.SUBSCRPT_AREA_CODE_NM = filters.region;
-      }
+        console.log('API 요청 파라미터:', params);
+        const response = await fetchApartmentInfo(params);
 
-      console.log('API 요청 파라미터:', params);
+        // 실제 데이터 수에 기반한 페이지 계산
+        const matchCount = response.matchCount || 0;
+        const totalPages = Math.ceil(matchCount / 50);
 
-      const response = await fetchApartmentInfo(params);
+        if (matchCount === 0) {
+          set({
+            apartmentList: [],
+            totalPages: 0,
+            currentPage: 1,
+            isLoading: false,
+            error: '검색 조건에 맞는 분양 정보가 없습니다.'
+          });
+          return;
+        }
 
-      // 실제 데이터 수에 기반한 페이지 계산
-      const matchCount = response.matchCount || 0;
-      const totalPages = Math.ceil(matchCount / 50); // 50개씩 나누어 총 페이지 계산
-      
-      // 데이터가 없는 경우
-      if (matchCount === 0) {
-        set({
-          apartmentList: [],
-          totalPages: 0,
-          currentPage: 1,
-          isLoading: false,
-          error: '검색 조건에 맞는 분양 정보가 없습니다.'
-        });
-        return;
-      }
-
-      // 현재 페이지가 총 페이지 수를 초과한 경우
-      if (currentPage > totalPages) {
         set({
           apartmentList: response.data || [],
           totalPages,
-          currentPage: totalPages,
+          currentPage,
           isLoading: false,
-          error: '마지막 페이지입니다.'
+          error: null
         });
-        return;
+      } else {
+        // 이미 데이터가 있는 경우, 현재 데이터를 그대로 사용
+        set({
+          isLoading: false,
+          error: null
+        });
       }
-
-      // 정상적인 경우
-      set({
-        apartmentList: response.data || [],
-        totalPages,
-        currentPage,
-        isLoading: false,
-        error: null
-      });
     } catch (error) {
       console.error('Store Error:', error);
       set({
