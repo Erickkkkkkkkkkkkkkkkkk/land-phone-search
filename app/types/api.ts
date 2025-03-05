@@ -37,6 +37,7 @@ export interface ApartmentInfo {
   PBLANC_URL?: string;
   BSNS_MBY_NM?: string;
   MDHS_TELNO?: string;
+  HMPG_ADRES?: string;
 }
 
 export type AreaCode = keyof typeof AREA_CODES;
