@@ -22,22 +22,30 @@ export interface ApartmentApiResponse {
 }
 
 export interface ApartmentInfo {
-  HOUSE_MANAGE_NO: string;
-  PBLANC_NO: string;
-  HOUSE_NM: string;
-  RCRIT_PBLANC_DE: string;
-  PRZWNER_PRESNATN_DE: string;
-  HOUSE_SECD?: string;
-  HOUSE_DTL_SECD?: string;
-  SUBSCRPT_AREA_CODE?: string;
-  SUBSCRPT_AREA_CODE_NM?: string;
-  RCEPT_BGNDE?: string;
-  HSSPLY_ADRES?: string;
-  TOT_SUPLY_HSHLDCO?: string;
-  PBLANC_URL?: string;
-  BSNS_MBY_NM?: string;
-  MDHS_TELNO?: string;
-  HMPG_ADRES?: string;
+  HOUSE_MANAGE_NO: string;           // 주택관리번호
+  PBLANC_NO: string;                // 공고번호
+  HOUSE_NM: string;                 // 주택명
+  RCRIT_PBLANC_DE: string;         // 모집공고일
+  PRZWNER_PRESNATN_DE: string;     // 당첨자발표일
+  HOUSE_SECD?: string;             // 주택구분코드
+  HOUSE_DTL_SECD?: string;         // 주택상세구분코드
+  HOUSE_SECD_NM?: string;          // 주택구분명
+  HOUSE_DTL_SECD_NM?: string;      // 주택상세구분명
+  SUBSCRPT_AREA_CODE?: string;     // 공급지역코드
+  SUBSCRPT_AREA_CODE_NM?: string;  // 공급지역명
+  RCEPT_BGNDE?: string;            // 접수시작일
+  HSSPLY_ADRES?: string;           // 공급위치
+  TOT_SUPLY_HSHLDCO?: string;      // 총공급가구수
+  PBLANC_URL?: string;             // 공고URL
+  RCRIT_PBLANC_URL?: string;       // 모집공고URL
+  BSNS_MBY_NM?: string;            // 사업주체명
+  CNSTRCT_ENTRPS_NM?: string;      // 시공업체명
+  MDHS_TELNO?: string;             // 문의처
+  HMPG_ADRES?: string;             // 홈페이지주소
+  SPSPLY_RCEPT_BGNDE?: string;     // 특별공급 접수시작일
+  SPSPLY_RCEPT_ENDDE?: string;     // 특별공급 접수종료일
+  GNRL_RCEPT_BGNDE?: string;       // 일반공급 접수시작일
+  GNRL_RCEPT_ENDDE?: string;       // 일반공급 접수종료일
 }
 
 export type AreaCode = keyof typeof AREA_CODES;

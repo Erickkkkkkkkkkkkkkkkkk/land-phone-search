@@ -1,4 +1,4 @@
-import { ApartmentInfo } from '@/app/types/apartment';
+import { ApartmentInfo } from '@/app/types/api';
 
 export type SaleStatus = 'upcoming' | 'ongoing' | 'completed';
 
