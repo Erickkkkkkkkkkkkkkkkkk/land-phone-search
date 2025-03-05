@@ -38,6 +38,7 @@ yarn-error.log*
 
 # cursor
 .cursorrules
+.cursorrules*
 
 # typescript
 *.tsbuildinfo
