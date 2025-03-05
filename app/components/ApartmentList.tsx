@@ -5,7 +5,7 @@ import { useChatStore } from '@/app/store/chatStore';
 import { Button } from '@/app/components/ui/button';
 import { Globe, Info } from 'lucide-react';
 import ApartmentDetailModal from '@/app/components/ApartmentDetailModal';
-import { ApartmentInfo } from '@/app/types/api';
+import { ApartmentInfo, HOUSE_CODES } from '@/app/types/api';
 import SaleStatusBadge from '@/app/components/SaleStatusBadge';
 
 export const ApartmentList = () => {
@@ -55,6 +55,20 @@ export const ApartmentList = () => {
     if (today < recDate) return 'upcoming';
     if (today > annDate) return 'completed';
     return 'ongoing';
+  };
+
+  // 주택구분 코드를 이름으로 변환하는 함수 추가
+  const getHouseTypeName = (code?: string): string => {
+    if (!code) return 'N/A';
+    
+    // HOUSE_CODES 객체의 키-값 쌍을 순회하며 코드에 해당하는 이름 찾기
+    for (const [name, houseCode] of Object.entries(HOUSE_CODES)) {
+      if (houseCode === code) {
+        return name;
+      }
+    }
+    
+    return code; // 매칭되는 코드가 없으면 원래 코드 반환
   };
 
   // 필터링된 아파트 목록 계산
@@ -199,7 +213,7 @@ export const ApartmentList = () => {
                   </div>
                   <div className="flex flex-row">
                     <span className="font-medium text-gray-600">주택구분:</span>
-                    <span className="ml-2">{apt.HOUSE_SECD || 'N/A'}</span>
+                    <span className="ml-2">{getHouseTypeName(apt.HOUSE_SECD) || 'N/A'}</span>
                   </div>
                 </div>
               </div>
