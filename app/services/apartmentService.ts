@@ -1,8 +1,12 @@
 import { ApartmentApiParams, ApartmentApiResponse } from '../types/api';
 import { calculateOneYearPeriod } from '../utils/dateUtils';
 
-const BASE_URL = 'https://api.odcloud.kr/api';
-const API_KEY = 'qGvXQsatfqC7L8fJoo+GPXf95HWgzNjTNotFONU4y8eKUi+mb1Ph1g+a3cqrSglWZjphsAUspokZQ1nExHom6A==';
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
+
+if (!API_KEY) {
+  console.warn('API 키가 설정되지 않았습니다. API 요청에 실패할 수 있습니다.');
+}
 
 export class ApiError extends Error {
   constructor(
@@ -21,7 +25,14 @@ export const fetchApartmentInfo = async (
   try {
     // URL 파라미터 구성
     const searchParams = new URLSearchParams();
-    searchParams.append('serviceKey', API_KEY);
+    
+    // API 키 안전하게 추가
+    if (API_KEY) {
+      searchParams.append('serviceKey', API_KEY);
+    } else {
+      throw new ApiError('API 키가 설정되지 않았습니다.', 500);
+    }
+
     searchParams.append('page', params.page.toString());
     searchParams.append('perPage', params.perPage.toString());
     searchParams.append('returnType', 'JSON');
